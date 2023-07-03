@@ -2,31 +2,31 @@ module "terra_vm_server" {
   source = "./modules/giit_base_vm"
 
   # Resource Group arguments
-  rg_name     = "giit-${terraform.workspace}-rg"
-  rg_location = "Central India"
+  rg_name     = "${var.prefix}-${var.rg_name}-${var.env}"
+  rg_location = var.rg_location
 
   # Network Security Group arguments
-  nsg_name = "giit_base_nsg"
+  nsg_name = "${var.prefix}-${var.nsg_name}-${var.env}"
 
   # Virtual Network arguments
-  vnet_name          = "giit_base_vnet"
-  vnet_address_space = ["10.0.0.0/16", "10.1.0.0/16"]
+  vnet_name          = "${var.prefix}-${var.vnet_name}-${var.env}"
+  vnet_address_space = var.vnet_address_space
 
   # Subnet arguments
-  subnet_name             = "subnet-A"
-  subnet_address_prefixes = ["10.0.0.0/24"]
+  subnet_name             = "${var.prefix}-${var.subnet_name}-${var.env}"
+  subnet_address_prefixes = var.subnet_address_prefixes
 
   # publicip arguments
-  public_ip_name             = "giit_public-ip"
+  public_ip_name             = "${var.prefix}-${var.env}-ip"
   publicip_allocation_method = "Dynamic"
 
   # network Interface arguments
-  nic_name = "giit_nic"
+  nic_name = "${var.prefix}_${var.env}_nic"
 
   # vm arguments
-  vm_name        = "terraform-giit-vm"
-  vm_size        = "Standard_DS1_V2"
-  admin_username = "giituser"
+  vm_name        = "terraform-${var.prefix}-${var.env}-vm"
+  vm_size        = var.vm_size
+  admin_username = var.admin_username
 
   # vm image arguments
   publisher        = "Canonical"
