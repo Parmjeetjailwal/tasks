@@ -13,7 +13,11 @@ variable "env" {
   type = string
 }
 
-variable "nsg_name" {
+variable "public_nsg_name" {
+  type = string
+}
+
+variable "private_nsg_name" {
   type = string
 }
 
@@ -25,11 +29,19 @@ variable "vnet_address_space" {
   type = list(string)
 }
 
-variable "subnet_name" {
+variable "public_subnet_name" {
   type = string
 }
 
-variable "subnet_address_prefixes" {
+variable "public_subnet_address_prefixes" {
+  type = list(string)
+}
+
+variable "private_subnet_name" {
+  type = string
+}
+
+variable "private_subnet_address_prefixes" {
   type = list(string)
 }
 

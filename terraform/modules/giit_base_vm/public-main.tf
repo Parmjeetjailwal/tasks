@@ -1,35 +1,18 @@
-# Create a resource group
-resource "azurerm_resource_group" "giit_rg" {
-  name     = var.rg_name
-  location = var.rg_location
-}
-
-# Create a virtual network
-resource "azurerm_virtual_network" "giit_virtual_network" {
-  name                = var.vnet_name
-  location            = azurerm_resource_group.giit_rg.location
-  resource_group_name = azurerm_resource_group.giit_rg.name
-  address_space       = var.vnet_address_space
-  depends_on = [ 
-    azurerm_resource_group.giit_rg
-   ]
-}
-
-# Create the first subnet
-resource "azurerm_subnet" "subnet1" {
-  name                 = var.subnet_name
+# Create the public subnet
+resource "azurerm_subnet" "public-subnet" {
+  name                 = var.public_subnet_name
   resource_group_name  = azurerm_resource_group.giit_rg.name
   virtual_network_name = azurerm_virtual_network.giit_virtual_network.name
-  address_prefixes     = var.subnet_address_prefixes
+  address_prefixes     = var.public_subnet_address_prefixes
   depends_on = [ 
     azurerm_resource_group.giit_rg,
     azurerm_virtual_network.giit_virtual_network
    ]
 }
 
-# Create the Network Security Group (NSG)
-resource "azurerm_network_security_group" "giit-nsg" {
-  name                = var.nsg_name
+# Create the public Network Security Group (NSG)
+resource "azurerm_network_security_group" "public-nsg" {
+  name                = var.public_nsg_name
   location            = azurerm_resource_group.giit_rg.location
   resource_group_name = azurerm_resource_group.giit_rg.name
   depends_on = [ 
@@ -49,9 +32,9 @@ resource "azurerm_network_security_rule" "allow-http" {
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.giit_rg.name
-  network_security_group_name = azurerm_network_security_group.giit-nsg.name
+  network_security_group_name = azurerm_network_security_group.public-nsg.name
   depends_on = [ 
-    azurerm_network_security_group.giit-nsg,
+    azurerm_network_security_group.public-nsg,
     azurerm_resource_group.giit_rg
    ]
 }
@@ -67,9 +50,9 @@ resource "azurerm_network_security_rule" "allow-https" {
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.giit_rg.name
-  network_security_group_name = azurerm_network_security_group.giit-nsg.name
+  network_security_group_name = azurerm_network_security_group.public-nsg.name
   depends_on = [ 
-    azurerm_network_security_group.giit-nsg,
+    azurerm_network_security_group.public-nsg,
     azurerm_resource_group.giit_rg
    ]
 }
@@ -85,9 +68,9 @@ resource "azurerm_network_security_rule" "allow-ssh" {
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.giit_rg.name
-  network_security_group_name = azurerm_network_security_group.giit-nsg.name
+  network_security_group_name = azurerm_network_security_group.public-nsg.name
   depends_on = [ 
-    azurerm_network_security_group.giit-nsg,
+    azurerm_network_security_group.public-nsg,
     azurerm_resource_group.giit_rg
    ]
 }
@@ -102,20 +85,20 @@ resource "azurerm_public_ip" "giit-public_ip" {
    ]
 }
 
-# Create a Linux VM in the first subnet
-resource "azurerm_linux_virtual_machine" "giit-vm" {
-  name                  = var.vm_name
+# Create a Linux VM in the public subnet
+resource "azurerm_linux_virtual_machine" "public-vm" {
+  name                  = var.public_vm_name
   resource_group_name   = azurerm_resource_group.giit_rg.name
   location              = azurerm_resource_group.giit_rg.location
   size                  = var.vm_size
   admin_username        = var.admin_username
-  network_interface_ids = [azurerm_network_interface.giit-nic.id]
+  network_interface_ids = [azurerm_network_interface.public-nic.id]
   admin_ssh_key {
     username   = var.admin_username
     public_key = file("${path.module}/ssh-keys/terraform-azure.pub")
   }
   os_disk {
-    name                 = "osdisk"
+    name                 = "publicosdisk"
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
   }
@@ -129,32 +112,32 @@ resource "azurerm_linux_virtual_machine" "giit-vm" {
 
   depends_on = [ 
     azurerm_resource_group.giit_rg,
-    azurerm_network_interface.giit-nic
+    azurerm_network_interface.public-nic
    ]
 }
 
-resource "azurerm_network_interface" "giit-nic" {
-  name                = var.nic_name
+resource "azurerm_network_interface" "public-nic" {
+  name                = var.public_nic_name
   location            = azurerm_resource_group.giit_rg.location
   resource_group_name = azurerm_resource_group.giit_rg.name
   ip_configuration {
     name                          = "internal"
-    subnet_id                     = azurerm_subnet.subnet1.id
+    subnet_id                     = azurerm_subnet.public-subnet.id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.giit-public_ip.id
   }
   depends_on = [ 
     azurerm_resource_group.giit_rg,
-    azurerm_subnet.subnet1,
+    azurerm_subnet.public-subnet,
     azurerm_public_ip.giit-public_ip
    ]
 }
 
-resource "azurerm_network_interface_security_group_association" "nic_nsg_association" {
-  network_interface_id      = azurerm_network_interface.giit-nic.id
-  network_security_group_id = azurerm_network_security_group.giit-nsg.id
+resource "azurerm_network_interface_security_group_association" "public_nic_nsg_association" {
+  network_interface_id      = azurerm_network_interface.public-nic.id
+  network_security_group_id = azurerm_network_security_group.public-nsg.id
   depends_on = [ 
-    azurerm_network_interface.giit-nic,
-    azurerm_network_security_group.giit-nsg
+    azurerm_network_interface.public-nic,
+    azurerm_network_security_group.public-nsg
    ]
 }
