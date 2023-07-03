@@ -2,7 +2,7 @@
 prefix = "giit"
 
 # Environment
-env = "test"
+env = "dev"
 
 # Resource Group arguments
 rg_name     = "rg"
@@ -24,5 +24,5 @@ private_subnet_address_prefixes = ["10.0.0.0/24"]
 
 # vm arguments
 vm_size        = "Standard_DS1_V2"
-admin_username = "testuser"
+admin_username = "devuser"
 
