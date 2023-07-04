@@ -83,6 +83,9 @@ resource "azurerm_public_ip" "giit-public_ip" {
   depends_on = [ 
     azurerm_resource_group.giit_rg
    ]
+  tags = merge(local.tags, {
+    ip-type = "public"
+  })
 }
 
 # Create a Linux VM in the public subnet
@@ -114,6 +117,9 @@ resource "azurerm_linux_virtual_machine" "public-vm" {
     azurerm_resource_group.giit_rg,
     azurerm_network_interface.public-nic
    ]
+    tags = merge(local.tags, {
+    vm_type = "public"
+  })
 }
 
 resource "azurerm_network_interface" "public-nic" {
@@ -131,6 +137,7 @@ resource "azurerm_network_interface" "public-nic" {
     azurerm_subnet.public-subnet,
     azurerm_public_ip.giit-public_ip
    ]
+  tags = local.tags
 }
 
 resource "azurerm_network_interface_security_group_association" "public_nic_nsg_association" {

@@ -15,6 +15,7 @@ resource "azurerm_network_security_group" "private-nsg" {
   name                = var.private_nsg_name
   location            = azurerm_resource_group.giit_rg.location
   resource_group_name = azurerm_resource_group.giit_rg.name
+  tags = local.tags
   depends_on = [ 
     azurerm_resource_group.giit_rg
    ]
@@ -33,6 +34,7 @@ resource "azurerm_network_interface" "frontend-vm-nic" {
     azurerm_resource_group.giit_rg,
     azurerm_subnet.private-subnet
    ]
+  tags = local.tags
 }
 
 # Create a Frontend Linux VM in the private subnet
@@ -62,6 +64,10 @@ resource "azurerm_linux_virtual_machine" "frontend-vm" {
     azurerm_resource_group.giit_rg,
     azurerm_network_interface.frontend-vm-nic
    ]
+
+  tags = merge(local.tags, {
+    vm_type = "frontend"
+  })
 }
 
 resource "azurerm_network_interface_security_group_association" "frontend_nic_nsg_association" {
@@ -82,6 +88,9 @@ resource "azurerm_network_interface" "backend-vm-nic" {
     subnet_id                     = azurerm_subnet.private-subnet.id
     private_ip_address_allocation = "Dynamic"
   }
+
+  tags = local.tags
+
   depends_on = [ 
     azurerm_resource_group.giit_rg,
     azurerm_subnet.private-subnet
@@ -115,6 +124,9 @@ resource "azurerm_linux_virtual_machine" "backend-vm" {
     azurerm_resource_group.giit_rg,
     azurerm_network_interface.backend-vm-nic
    ]
+  tags = merge(local.tags, {
+    vm_type = "backend"
+  })
 }
 
 resource "azurerm_network_interface_security_group_association" "backend_nic_nsg_association" {
@@ -139,6 +151,7 @@ resource "azurerm_network_interface" "db-vm-nic" {
     azurerm_resource_group.giit_rg,
     azurerm_subnet.private-subnet
    ]
+  tags = local.tags
 }
 
 # Create a db Linux VM in the private subnet
@@ -168,6 +181,9 @@ resource "azurerm_linux_virtual_machine" "db-vm" {
     azurerm_resource_group.giit_rg,
     azurerm_network_interface.db-vm-nic
    ]
+    tags = merge(local.tags, {
+    vm_type = "db"
+  })
 }
 
 resource "azurerm_network_interface_security_group_association" "db_nic_nsg_association" {
