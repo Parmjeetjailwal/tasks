@@ -11,6 +11,6 @@ terraform {
     resource_group_name  = "demo"
     storage_account_name = "giitsollutionbackend"
     container_name       = "tfstatefiles"
-    key                  = "terraform.tfstate"
+    key                  = "prod/terraform.tfstate"
   }
 }
